@@ -11,7 +11,7 @@ Il possède 4 commandes :
 
 Le bot est codé en Python via le fichier [discord.py](https://github.com/Rapptz/discord.py).
 
-En cas de suggestion, d'ajout, veuillez passer par l'onglet "issues" ou de vous rapprocher de `Tibo#4872`sur le [Discord](https://discord.gg/pxMcdamMzA) du jeu.
+En cas de suggestion, d'ajout, veuillez passer par l'onglet "issues" ou de vous rapprocher de `Thibaut#4872`sur le [Discord](https://discord.gg/pxMcdamMzA) du jeu.
 
 
 
