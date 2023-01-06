@@ -1,6 +1,8 @@
 # Gare Manager Bot
  ![image](https://user-images.githubusercontent.com/59665309/204164199-3033077f-4f17-4a44-8a27-79e0f1a75b14.png)
 
+**Projet Archivé - N'est plus maintenu**
+
 Bot lié au jeu [Gare Manager](https://gare-manager.fr/dashboard.php).
 
 Il possède 4 commandes :
