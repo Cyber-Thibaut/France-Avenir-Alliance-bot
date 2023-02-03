@@ -1,8 +1,7 @@
 import discord
 from discord.ext import commands
-import os # default module
+import os
 from dotenv import load_dotenv
-from random import choice
 from discord import Option
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
@@ -19,17 +18,33 @@ async def on_ready():
     print(f"{bot.user} is ready and online!")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="la version " + version))
 
-@bot.slash_command(name="rolereact")
-async def rolereact(ctx, *, message: str):
-    message = await ctx.send(message)
-    await message.add_reaction('✅')
-    await message.add_reaction('❎')
+@bot.slash_command(name="reglement")
+async def open_reglement(ctx):
+    modal = ReglementModal(title="Crée le règlement de l'alliance")
+    await ctx.response.send_modal(modal)
+
+class ReglementModal(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.add_item(discord.ui.InputText(label="", style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="Règlement de l'Alliance", 
+            color=0x034DA2)
+        embed.add_field(name="", value=self.children[0].value)
+        embed.set_author(name="Flo & Thibaut les dirlos")   
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
+        message = await bot.get_channel(int(1070036471676940339)).send(embeds=[embed])
+        await message.add_reaction('✅')
+        await message.add_reaction('❎')
+        await interaction.response.send_message("Modal envoyé ^^", ephemeral=True, delete_after=3)
 
 @bot.event
 async def on_raw_reaction_add(payload):
     guild = bot.get_guild(payload.guild_id)
     member = guild.get_member(payload.user_id)
-    role = discord.utils.get(guild.roles, name='prout')
+    role = discord.utils.get(guild.roles, name='Règlement Approuvé')
     if role is not None:
         if payload.emoji.name == '✅':
             await member.add_roles(role)
@@ -48,7 +63,7 @@ class id(discord.ui.Modal):
         embed.add_field(name="", value=self.children[0].value)
         embed.set_author(name="Flo & Thibaut les dirlos")   
         embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
-        await bot.get_channel(int(1062738561939550250)).send(embeds=[embed])
+        await bot.get_channel(int(1070036861403267132)).send(embeds=[embed])
         await interaction.response.send_message("Modal envoyé ^^", ephemeral=True, delete_after=3)
 
 class ad(discord.ui.Modal):
@@ -64,7 +79,7 @@ class ad(discord.ui.Modal):
         embed.add_field(name="", value=self.children[0].value)
         embed.set_author(name="Flo & Thibaut les dirlos")   
         embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
-        await bot.get_channel(int(1062738561939550250)).send(embeds=[embed])
+        await bot.get_channel(int(1070036861403267132)).send(embeds=[embed])
         await interaction.response.send_message("Modal envoyé ^^", ephemeral=True, delete_after=3)
 
 class annonce(discord.ui.View):
@@ -119,7 +134,7 @@ async def ban(ctx, member: Option(discord.Member, description = "Who do you want
 @ban.error
 async def banerror(ctx, error):
     if isinstance(error, MissingPermissions):
-        await ctx.respond("Vous avez besoin de la permission s de ban et de gérer les utilisateurs!")
+        await ctx.respond("Vous avez besoin de la permission de ban et de gérer les utilisateurs!")
     else:
         await ctx.respond("Hum c'est pas normal...") #most likely due to missing permissions
         raise error
@@ -145,55 +160,63 @@ async def kickerror(ctx, error):
         await ctx.respond("Hum c'est pas normal...") #most likely due to missing permissions 
         raise error
 
-@bot.slash_command(guild_ids = servers, name = 'timeout', description = "mutes/timeouts a member")
+@bot.slash_command(guild_ids = servers, name = 'bâillonner', description = "bâillonner un membre")
 @commands.has_permissions(moderate_members = True)
 async def timeout(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False), days: Option(int, max_value = 27, default = 0, required = False), hours: Option(int, default = 0, required = False), minutes: Option(int, default = 0, required = False), seconds: Option(int, default = 0, required = False)): #setting each value with a default value of 0 reduces a lot of the code
     if member.id == ctx.author.id:
-        await ctx.respond("You can't timeout yourself!")
+        await ctx.respond("Tu ne peut pas te bâillonner toi-même!")
         return
     if member.guild_permissions.moderate_members:
-        await ctx.respond("You can't do this, this person is a moderator!")
+        await ctx.respond("MAIS ! Tu ne peut pas c'est un modo !")
         return
     duration = timedelta(days = days, hours = hours, minutes = minutes, seconds = seconds)
     if duration >= timedelta(days = 28): #added to check if time exceeds 28 days
-        await ctx.respond("I can't mute someone for more than 28 days!", ephemeral = True) #responds, but only the author can see the response
+        await ctx.respond("Désolé je peut pas bâillonner plus de 28 jours !", ephemeral = True) #responds, but only the author can see the response
         return
     if reason == None:
         await member.timeout_for(duration)
-        await ctx.respond(f"<@{member.id}> has been timed out for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds by <@{ctx.author.id}>.")
+        await ctx.respond(f"<@{member.id}> A été bâillonné pour {days} jours, {hours} heures, {minutes} minutes, & {seconds} secondes par <@{ctx.author.id}>.")
     else:
         await member.timeout_for(duration, reason = reason)
-        await ctx.respond(f"<@{member.id}> has been timed out for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds by <@{ctx.author.id}> for '{reason}'.")
+        await ctx.respond(f"<@{member.id}> A été bâillonné pour {days} jours, {hours} heures, {minutes} minutes, & {seconds} secondes par <@{ctx.author.id}> pour '{reason}'.")
 
 @timeout.error
 async def timeouterror(ctx, error):
     if isinstance(error, MissingPermissions):
-        await ctx.respond("You can't do this! You need to have moderate members permissions!")
+        await ctx.respond("Tu as besoin de la permission de mute et gérer les membres!")
     else:
         raise error
 
-@bot.slash_command(guild_ids = servers, name = 'unmute', description = "unmutes/untimeouts a member")
+@bot.slash_command(guild_ids = servers, name = 'débâillonner', description = "débâillonner un membre")
 @commands.has_permissions(moderate_members = True)
 async def unmute(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False)):
     if reason == None:
         await member.remove_timeout()
-        await ctx.respond(f"<@{member.id}> has been untimed out by <@{ctx.author.id}>.")
+        await ctx.respond(f"<@{member.id}> a été débâillonné par <@{ctx.author.id}>.")
     else:
         await member.remove_timeout(reason = reason)
-        await ctx.respond(f"<@{member.id}> has been untimed out by <@{ctx.author.id}> for '{reason}'.")
+        await ctx.respond(f"<@{member.id}> a été débâillonné <@{ctx.author.id}> pour '{reason}'.")
 
 @unmute.error
 async def unmuteerror(ctx, error):
     if isinstance(error, MissingPermissions):
-        await ctx.respond("You can't do this! You need to have moderate members permissions!")
+        await ctx.respond("Tu as besoin de la permission de mute et gérer les membres!")
     else:
         raise error
 
-@bot.slash_command(name="clear")
+@bot.slash_command(name="menage")
+@commands.has_permissions(MANAGE_MESSAGES = True)
 async def clear(ctx, nombre : int):
     messages = [msg async for msg in ctx.channel.history(limit = nombre)] 
     for message in messages:
         await message.delete()
-    await ctx.respond(f'{nombre} message clear')
+    await ctx.respond(f'{nombre} message supprimés')
+
+@menage.error
+async def unmuteerror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("Tu as besoin de la permission de gérer les messages!")
+    else:
+        raise error
 load_dotenv()
 bot.run(os.getenv('TOKEN'))
