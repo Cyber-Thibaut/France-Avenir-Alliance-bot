@@ -6,37 +6,48 @@ import os # default module
 from dotenv import load_dotenv
 import linecache
 from random import choice
+from discord import Option
+from discord.ext import commands
+from discord.ext.commands import MissingPermissions
+from datetime import timedelta
 intents = discord.Intents.default()
 intents.message_content = True
 version = "0.1.1"
 bot = commands.Bot()
+servers = ['1062738560588972142']
 
 # démarrage
-@bot.event
+@bot.event  # event decorator/wrapper
 async def on_ready():
     print(f"{bot.user} is ready and online!")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="la version " + version))
 
-@bot.slash_command(name="travaux")
-async def travaux(ctx, message: discord.Option(str)):
-    embed = discord.Embed(
-        title="Attention Travaux",
-        description=message,
-        color=0xE55D27, # Pycord provides a class with default colors you can choose from
-    )
-    embed.set_author(name="Autorité de régulation", icon_url="https://media.discordapp.net/attachments/1044705168534556755/1046468665832378478/travaux.png")
-    embed.set_image(url="https://cdn.discordapp.com/attachments/1044705168534556755/1046461698896318524/image.png")
-    await ctx.respond("", embed=embed)
+@bot.slash_command(name="rolereact")
+async def rolereact(ctx, *, message: str):
+    message = await ctx.send(message)
+    await message.add_reaction('✅')
+    await message.add_reaction('❎')
 
-@bot.slash_command(name="annonce")
+@bot.event
+async def on_raw_reaction_add(payload):
+    guild = bot.get_guild(payload.guild_id)
+    member = guild.get_member(payload.user_id)
+    role = discord.utils.get(guild.roles, name='prout')
+    if role is not None:
+        if payload.emoji.name == '✅':
+            await member.add_roles(role)
+        elif payload.emoji.name == '❎':
+            await member.remove_roles(role)
+
+@bot.slash_command(name="annonce")  # decorator/wrapper
 async def annonce(ctx, message: discord.Option(str)):
     embed = discord.Embed(
         title="Annonce",
         description=message,
         color=0xFF1616, # Pycord provides a class with default colors you can choose from
     )
-    embed.set_author(name="Autorité de régulation", icon_url="https://media.discordapp.net/attachments/1044705168534556755/1046468665530392636/annonce.png")
-    embed.set_image(url="https://cdn.discordapp.com/attachments/1044705168534556755/1046449552036729012/image.png")
+    embed.set_author(name="Flo & Thibaut les dirlos")   
+    embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
     await ctx.respond("", embed=embed)
 
 @bot.slash_command(name="info")
@@ -46,11 +57,11 @@ async def info(ctx, message: discord.Option(str)):
         description=message,
         color=0x034DA2, # Pycord provides a class with default colors you can choose from
     )
-    embed.set_author(name="Concessions", icon_url="https://media.discordapp.net/attachments/1044705168534556755/1046468665182257172/concess.png")
-    embed.set_image(url="https://cdn.discordapp.com/attachments/1044705168534556755/1046461639572082738/image.png")
+    embed.set_author(name="Flo & Thibaut les dirlos")   
+    embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
     await ctx.respond("", embed=embed)
 
-@bot.slash_command(name="help")
+@bot.slash_command(name="aide")
 async def help(ctx):
     embed=discord.Embed(title="Bonjour je suis l'Assistant de direction de l'alliance France Avenir", description="Voici la liste des commandes disponibles")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
@@ -59,64 +70,91 @@ async def help(ctx):
     embed.add_field(name="Oups celle-ci est réservée à l'administration", value="/annonce", inline=True)
     await ctx.respond(embed=embed)
 
-async def createMutedRole(ctx):
-    mutedRole = await ctx.guild.create_role(name = "Ralph la casse 🧱🧱🧱🧱🧱🧱🧱",
-                                            permissions = discord.Permissions(
-                                                respond_messages = False,
-                                                speak = False),
-                                            reason = "Creation du role Muted pour mute des gens.")
-    for channel in ctx.guild.channels:
-        await channel.set_permissions(mutedRole, respond_messages = False, speak = False)
-    return mutedRole
-
-async def getMutedRole(ctx):
-    roles = ctx.guild.roles
-    for role in roles:
-        if role.name == "Ralph la casse 🧱🧱🧱🧱🧱🧱🧱":
-            return role
+@bot.slash_command(guild_ids = servers, name = "ban", description = "Ban un membre")
+@commands.has_permissions(ban_members = True, administrator = True)
+async def ban(ctx, member: Option(discord.Member, description = "Who do you want to ban?"), reason: Option(str, description = "Why?", required = False)):
+    if member.id == ctx.author.id: #checks to see if they're the same
+        await ctx.respond("BRUH! Tu ne peut te ban toi même !")
+    elif member.guild_permissions.administrator:
+        await ctx.respond("Arrête de vouloir ban un admin! :rolling_eyes:")
+    else:
+        if reason == None:
+            reason = f"Aucune raison fournie par {ctx.author}"
+        await member.ban(reason = reason)
+        await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> a été ban avec succès du serveur!\n\nRaison: {reason}")
     
-    return await createMutedRole(ctx)
+@ban.error
+async def banerror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("Vous avez besoin de la permission s de ban et de gérer les utilisateurs!")
+    else:
+        await ctx.respond("Hum c'est pas normal...") #most likely due to missing permissions
+        raise error
 
-@bot.slash_command(name="mute", description="Rendre muet un membre")
-async def mute(ctx, member : discord.Member, *, reason = "Aucune raison n'a été renseigné"):
-    mutedRole = await getMutedRole(ctx)
-    await member.add_roles(mutedRole, reason = reason)
-    await ctx.respond(f"{member.mention} a été mute pour {reason} !")
+@bot.slash_command(guild_ids = servers, name = "expulser", description = "Expluser un membre")
+@commands.has_permissions(kick_members = True, administrator = True)
+async def kick(ctx, member: Option(discord.Member, description = "Who do you want to kick?"), reason: Option(str, description = "Why?", required = False)):
+    if member.id == ctx.author.id: #checks to see if they're the same
+        await ctx.respond("BRUH! Tu ne peut pas t'expulser toi même !")
+    elif member.guild_permissions.administrator:
+        await ctx.respond("Mais ! Arrête de vouloir expulser un admin ! :rolling_eyes:")
+    else:
+        if reason == None:
+            reason = f"Aucune raison fournie par {ctx.author}"
+        await member.kick(reason = reason)
+        await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> à été expulsé du serveur avec succès!\n\nRaison: {reason}")
 
-@bot.slash_command(name="unmute", description="Rendre muet un membre")
-async def unmute(ctx, member : discord.Member, *, reason = "Aucune raison n'a été renseigné"):
-    mutedRole = await getMutedRole(ctx)
-    await member.remove_roles(mutedRole, reason = reason)
-    await ctx.respond(f"{member.mention} a été unmute !")
+@kick.error
+async def kickerror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("Tu as besoin de la permission d'expulser et gérer les membres !")
+    else:
+        await ctx.respond("Hum c'est pas normal...") #most likely due to missing permissions 
+        raise error
 
+@bot.slash_command(guild_ids = servers, name = 'timeout', description = "mutes/timeouts a member")
+@commands.has_permissions(moderate_members = True)
+async def timeout(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False), days: Option(int, max_value = 27, default = 0, required = False), hours: Option(int, default = 0, required = False), minutes: Option(int, default = 0, required = False), seconds: Option(int, default = 0, required = False)): #setting each value with a default value of 0 reduces a lot of the code
+    if member.id == ctx.author.id:
+        await ctx.respond("You can't timeout yourself!")
+        return
+    if member.guild_permissions.moderate_members:
+        await ctx.respond("You can't do this, this person is a moderator!")
+        return
+    duration = timedelta(days = days, hours = hours, minutes = minutes, seconds = seconds)
+    if duration >= timedelta(days = 28): #added to check if time exceeds 28 days
+        await ctx.respond("I can't mute someone for more than 28 days!", ephemeral = True) #responds, but only the author can see the response
+        return
+    if reason == None:
+        await member.timeout_for(duration)
+        await ctx.respond(f"<@{member.id}> has been timed out for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds by <@{ctx.author.id}>.")
+    else:
+        await member.timeout_for(duration, reason = reason)
+        await ctx.respond(f"<@{member.id}> has been timed out for {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds by <@{ctx.author.id}> for '{reason}'.")
 
-@bot.command()
-async def unban(ctx, user, *reason):
-	reason = " ".join(reason)
-	userName, userId = user.split("#")
-	bannedUsers = await ctx.guild.bans()
-	for i in bannedUsers:
-		if i.user.name == userName and i.user.discriminator == userId:
-			await ctx.guild.unban(i.user, reason = reason)
-			await ctx.respond(f"{user} à été unban.")
-			return
-	#Ici on sait que lutilisateur na pas ete trouvé
-	await ctx.respond(f"L'utilisateur {user} n'est pas dans la liste des bans")
-@bot.event
-async def on_message_delete(message):
-    if message.channel.id == 1041660576180469852:
-        await message.channel.send(f"Le message de {message.author} a été supprimé 🚨🚨🚨")
+@timeout.error
+async def timeouterror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("You can't do this! You need to have moderate members permissions!")
+    else:
+        raise error
 
-@bot.event
-async def on_message_edit(before, after):
-    if before.channel.id == 1041660576180469852:
-        await before.channel.send(f"{before.author} a édité son message 🚨🚨🚨")
+@bot.slash_command(guild_ids = servers, name = 'unmute', description = "unmutes/untimeouts a member")
+@commands.has_permissions(moderate_members = True)
+async def unmute(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False)):
+    if reason == None:
+        await member.remove_timeout()
+        await ctx.respond(f"<@{member.id}> has been untimed out by <@{ctx.author.id}>.")
+    else:
+        await member.remove_timeout(reason = reason)
+        await ctx.respond(f"<@{member.id}> has been untimed out by <@{ctx.author.id}> for '{reason}'.")
 
-@bot.command()
-async def kick(ctx, user : discord.User, *reason):
-	reason = " ".join(reason)
-	await ctx.guild.kick(user, reason = reason)
-	await ctx.respond(f"{user} à été kick.")
+@unmute.error
+async def unmuteerror(ctx, error):
+    if isinstance(error, MissingPermissions):
+        await ctx.respond("You can't do this! You need to have moderate members permissions!")
+    else:
+        raise error
 
 @bot.slash_command(name="clear")
 async def clear(ctx, nombre : int):
