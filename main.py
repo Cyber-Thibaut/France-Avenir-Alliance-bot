@@ -1,10 +1,7 @@
 import discord
 from discord.ext import commands
-import subprocess
-import sys
 import os # default module
 from dotenv import load_dotenv
-import linecache
 from random import choice
 from discord import Option
 from discord.ext import commands
