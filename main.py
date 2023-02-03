@@ -42,12 +42,13 @@ async def on_raw_reaction_add(payload):
 class id(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
+        self.add_item(discord.ui.InputText(label="", style=discord.InputTextStyle.long))
 
     async def callback(self, interaction: discord.Interaction):
         embed = discord.Embed(
             title="Information de la direction", 
             color=0x034DA2)
-        embed.add_field(name="Détail de l'annonce", value=self.children[0].value)
+        embed.add_field(name="", value=self.children[0].value)
         embed.set_author(name="Flo & Thibaut les dirlos")   
         embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
         await bot.get_channel(int(1062738561939550250)).send(embeds=[embed])
@@ -57,11 +58,13 @@ class ad(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
+        self.add_item(discord.ui.InputText(label="", style=discord.InputTextStyle.long))
+
     async def callback(self, interaction: discord.Interaction):
         embed = discord.Embed(
             title="Annonce de la direction", 
             color=0xFF1616)
-        embed.add_field(name="Détail de l'annonce", value=self.children[0].value)
+        embed.add_field(name="", value=self.children[0].value)
         embed.set_author(name="Flo & Thibaut les dirlos")   
         embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
         await bot.get_channel(int(1062738561939550250)).send(embeds=[embed])
