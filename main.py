@@ -39,27 +39,60 @@ async def on_raw_reaction_add(payload):
         elif payload.emoji.name == '❎':
             await member.remove_roles(role)
 
-@bot.slash_command(name="annonce")  # decorator/wrapper
-async def annonce(ctx, message: discord.Option(str)):
-    embed = discord.Embed(
-        title="Annonce",
-        description=message,
-        color=0xFF1616, # Pycord provides a class with default colors you can choose from
-    )
-    embed.set_author(name="Flo & Thibaut les dirlos")   
-    embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
-    await ctx.respond("", embed=embed)
+class id(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
-@bot.slash_command(name="info")
-async def info(ctx, message: discord.Option(str)):
-    embed = discord.Embed(
-        title="Information",
-        description=message,
-        color=0x034DA2, # Pycord provides a class with default colors you can choose from
+    async def callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="Information de la direction", 
+            color=0x034DA2)
+        embed.add_field(name="Détail de l'annonce", value=self.children[0].value)
+        embed.set_author(name="Flo & Thibaut les dirlos")   
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
+        await bot.get_channel(int(1062738561939550250)).send(embeds=[embed])
+        await interaction.response.send_message("Modal envoyé ^^", ephemeral=True, delete_after=3)
+
+class ad(discord.ui.Modal):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+    async def callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="Annonce de la direction", 
+            color=0xFF1616)
+        embed.add_field(name="Détail de l'annonce", value=self.children[0].value)
+        embed.set_author(name="Flo & Thibaut les dirlos")   
+        embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
+        await bot.get_channel(int(1062738561939550250)).send(embeds=[embed])
+        await interaction.response.send_message("Modal envoyé ^^", ephemeral=True, delete_after=3)
+
+class annonce(discord.ui.View):
+    @discord.ui.select( # the decorator that lets you specify the properties of the select menu
+        placeholder = "Quel type d'information ?", # the placeholder text that will be displayed if nothing is selected
+        min_values = 1, # the minimum number of values that must be selected by the users
+        max_values = 1, # the maximum number of values that can be selected by the users
+        options = [ # the list of options from which users can choose, a required field
+            discord.SelectOption(
+                label="Annonce de la direction",
+                description="Pour toutes les grosses infos"
+            ),
+            discord.SelectOption(
+                label="Information",
+                description="Pour les infos plus petites"
+            )
+        ]
     )
-    embed.set_author(name="Flo & Thibaut les dirlos")   
-    embed.set_image(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
-    await ctx.respond("", embed=embed)
+    async def select_callback(self, select, interaction): # the function called when the user is done selecting options
+        if select.values[0]=="Annonce de la direction":
+            modal = ad(title="Crée l'annonce de la direction")
+        if select.values[0]=="Information":
+            modal = id(title="Crée l'information")
+        await interaction.response.send_modal(modal)
+
+@bot.slash_command(name="annonce")
+async def flavor(ctx):
+    await ctx.respond("Quel type d'information ?", view=annonce(), ephemeral=True, delete_after=5)
 
 @bot.slash_command(name="aide")
 async def help(ctx):
