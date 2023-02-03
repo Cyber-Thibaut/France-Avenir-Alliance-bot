@@ -9,13 +9,8 @@ from random import choice
 intents = discord.Intents.default()
 intents.message_content = True
 version = "0.1.1"
-from selenium import webdriver
-import geckodriver_autoinstaller
-
-driver = webdriver.Firefox()
 bot = commands.Bot()
 
-print ("Firefox ✔")
 # démarrage
 @bot.event
 async def on_ready():
@@ -55,44 +50,79 @@ async def info(ctx, message: discord.Option(str)):
     embed.set_image(url="https://cdn.discordapp.com/attachments/1044705168534556755/1046461639572082738/image.png")
     await ctx.respond("", embed=embed)
 
-@bot.slash_command(name="spot")
-async def spotgm(ctx):
-
-    try:
-        message = await ctx.respond("Spot en préparation")
-        
-        driver.set_window_size(1200, 810)
-        driver.get('https://gare-manager.fr/bot_trafic.php')
-        driver.save_screenshot('spot.png')
-
-        with open('spot.png', "rb") as fh:
-            f = discord.File(fh, filename='spot.png')
-        await ctx.send(file=f)
-        await message.delete()
-    except Exception as e:
-        await printerror(e, ctx)
-
-async def printerror(e, ctx):
-    exc_type, exc_obj, tb = sys.exc_info()
-    f = tb.tb_frame
-    lineno = tb.tb_lineno
-    filename = f.f_code.co_filename
-    linecache.checkcache(filename)
-    line = linecache.getline(filename, lineno, f.f_globals)
-    print('EXCEPTION IN ({}, LINE {} "{}"): {}'.format(filename, lineno, line.strip(), exc_obj))
-
-    embed = discord.Embed(
-        description = ':red_circle: Quelque chose s\'est mal passé',
-        color = discord.Color.from_rgb(215, 2, 2)
-    )    
-
 @bot.slash_command(name="help")
 async def help(ctx):
-    embed=discord.Embed(title="Bonjour je suis l'Assistant de l'Autorité de régulation de Gare Manager", description="Voici la liste des commandes disponibles")
-    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1036736309248659526/1046465938427494400/Design_sans_titre.png")
-    embed.add_field(name="Pour afficher 4 trains en circulation en ce moment même", value="/spot", inline=False)
-    embed.add_field(name="Oups celle-ci est réservée aux concessionnaires ^^", value="/infos", inline=True)
-    embed.add_field(name="Oups celle-ci est réservée à l'administration", value="/travaux", inline=True)
+    embed=discord.Embed(title="Bonjour je suis l'Assistant de direction de l'alliance France Avenir", description="Voici la liste des commandes disponibles")
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
+    embed.add_field(name="Pour afficher 3 trains en circulation en ce moment même", value="/spot", inline=False)
+    embed.add_field(name="Oups celle-ci est réservée à l'administration", value="/infos", inline=True)
+    embed.add_field(name="Oups celle-ci est réservée à l'administration", value="/annonce", inline=True)
     await ctx.respond(embed=embed)
+
+async def createMutedRole(ctx):
+    mutedRole = await ctx.guild.create_role(name = "Ralph la casse 🧱🧱🧱🧱🧱🧱🧱",
+                                            permissions = discord.Permissions(
+                                                respond_messages = False,
+                                                speak = False),
+                                            reason = "Creation du role Muted pour mute des gens.")
+    for channel in ctx.guild.channels:
+        await channel.set_permissions(mutedRole, respond_messages = False, speak = False)
+    return mutedRole
+
+async def getMutedRole(ctx):
+    roles = ctx.guild.roles
+    for role in roles:
+        if role.name == "Ralph la casse 🧱🧱🧱🧱🧱🧱🧱":
+            return role
+    
+    return await createMutedRole(ctx)
+
+@bot.slash_command(name="mute", description="Rendre muet un membre")
+async def mute(ctx, member : discord.Member, *, reason = "Aucune raison n'a été renseigné"):
+    mutedRole = await getMutedRole(ctx)
+    await member.add_roles(mutedRole, reason = reason)
+    await ctx.respond(f"{member.mention} a été mute pour {reason} !")
+
+@bot.slash_command(name="unmute", description="Rendre muet un membre")
+async def unmute(ctx, member : discord.Member, *, reason = "Aucune raison n'a été renseigné"):
+    mutedRole = await getMutedRole(ctx)
+    await member.remove_roles(mutedRole, reason = reason)
+    await ctx.respond(f"{member.mention} a été unmute !")
+
+
+@bot.command()
+async def unban(ctx, user, *reason):
+	reason = " ".join(reason)
+	userName, userId = user.split("#")
+	bannedUsers = await ctx.guild.bans()
+	for i in bannedUsers:
+		if i.user.name == userName and i.user.discriminator == userId:
+			await ctx.guild.unban(i.user, reason = reason)
+			await ctx.respond(f"{user} à été unban.")
+			return
+	#Ici on sait que lutilisateur na pas ete trouvé
+	await ctx.respond(f"L'utilisateur {user} n'est pas dans la liste des bans")
+@bot.event
+async def on_message_delete(message):
+    if message.channel.id == 1041660576180469852:
+        await message.channel.send(f"Le message de {message.author} a été supprimé 🚨🚨🚨")
+
+@bot.event
+async def on_message_edit(before, after):
+    if before.channel.id == 1041660576180469852:
+        await before.channel.send(f"{before.author} a édité son message 🚨🚨🚨")
+
+@bot.command()
+async def kick(ctx, user : discord.User, *reason):
+	reason = " ".join(reason)
+	await ctx.guild.kick(user, reason = reason)
+	await ctx.respond(f"{user} à été kick.")
+
+@bot.slash_command(name="clear")
+async def clear(ctx, nombre : int):
+    messages = [msg async for msg in ctx.channel.history(limit = nombre)] 
+    for message in messages:
+        await message.delete()
+    await ctx.respond(f'{nombre} message clear')
 load_dotenv()
 bot.run(os.getenv('TOKEN'))
