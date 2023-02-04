@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 from discord import Option
 from discord.ext import commands
 from discord.ext.commands import MissingPermissions
@@ -119,16 +120,18 @@ async def help(ctx):
 
 @bot.slash_command(name = "ban", description = "Ban un membre")
 @commands.has_permissions(ban_members = True, administrator = True)
-async def ban(ctx, member: Option(discord.Member, description = "Who do you want to ban?"), reason: Option(str, description = "Why?", required = False)):
+async def ban(ctx, member: Option(discord.Member, description = "Vous voulez rouler sur qui avec le train?"), reason: Option(str, description = "Pourquoi?", required = False)):
     if member.id == ctx.author.id: #checks to see if they're the same
-        await ctx.respond("BRUH! Tu ne peut te ban toi même !")
+        await ctx.respond("BRUH! Tu ne peut t'écraser toi même !")
     elif member.guild_permissions.administrator:
-        await ctx.respond("Arrête de vouloir ban un admin! :rolling_eyes:")
+        await ctx.respond("Arrête de vouloir écraser un admin! :rolling_eyes:")
     else:
         if reason == None:
             reason = f"Aucune raison fournie par {ctx.author}"
         await member.ban(reason = reason)
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {member.name} (ID : {member.id}) a été ban avec succès du serveur par {ctx.author.name} (ID : {ctx.author.id})!\n\nRaison: {reason}."
         await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> a été ban avec succès du serveur!\n\nRaison: {reason}")
+        await bot.get_channel(int(1071511268260855808)).send(log)
     
 @ban.error
 async def banerror(ctx, error):
@@ -140,16 +143,18 @@ async def banerror(ctx, error):
 
 @bot.slash_command(name = "expulser", description = "Expluser un membre")
 @commands.has_permissions(kick_members = True, administrator = True)
-async def kick(ctx, member: Option(discord.Member, description = "Who do you want to kick?"), reason: Option(str, description = "Why?", required = False)):
+async def kick(ctx, member: Option(discord.Member, description = "Qui voulez vous jeter du train ?"), reason: Option(str, description = "Pourquoi ?", required = False)):
     if member.id == ctx.author.id: #checks to see if they're the same
-        await ctx.respond("BRUH! Tu ne peut pas t'expulser toi même !")
+        await ctx.respond("BRUH! Tu ne peut pas te jeter du train toi même !")
     elif member.guild_permissions.administrator:
-        await ctx.respond("Mais ! Arrête de vouloir expulser un admin ! :rolling_eyes:")
+        await ctx.respond("Mais ! Arrête de vouloir jeter du train un admin ! :rolling_eyes:")
     else:
         if reason == None:
             reason = f"Aucune raison fournie par {ctx.author}"
         await member.kick(reason = reason)
-        await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> à été expulsé du serveur avec succès!\n\nRaison: {reason}")
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {member.name} (ID : {member.id}) a été été poussé du train avec succès du serveur par {ctx.author.name} (ID : {ctx.author.id})!\n\nRaison: {reason}."
+        await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> à été poussé du train avec succès!\n\nRaison: {reason}")
+        await bot.get_channel(int(1071511268260855808)).send(log)
 
 @kick.error
 async def kickerror(ctx, error):
@@ -174,10 +179,14 @@ async def timeout(ctx, member: Option(discord.Member, required = True), reason: 
         return
     if reason == None:
         await member.timeout_for(duration)
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été bâillonné par {ctx.author.name} (ID : {ctx.author.id})."
         await ctx.respond(f"<@{member.id}> A été bâillonné pour {days} jours, {hours} heures, {minutes} minutes, & {seconds} secondes par <@{ctx.author.id}>.")
+        await bot.get_channel(int(1071511268260855808)).send(log)
     else:
         await member.timeout_for(duration, reason = reason)
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été bâillonné par {ctx.author.name} (ID : {ctx.author.id}) pour '{reason}'."
         await ctx.respond(f"<@{member.id}> A été bâillonné pour {days} jours, {hours} heures, {minutes} minutes, & {seconds} secondes par <@{ctx.author.id}> pour '{reason}'.")
+        await bot.get_channel(int(1071511268260855808)).send(log)
 
 @timeout.error
 async def timeouterror(ctx, error):
@@ -191,10 +200,14 @@ async def timeouterror(ctx, error):
 async def unmute(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False)):
     if reason == None:
         await member.remove_timeout()
-        await ctx.respond(f"<@{member.id}> a été débâillonné par <@{ctx.author.id}>.")
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été débâillonné par {ctx.author.name} (ID : {ctx.author.id})."
+        await ctx.respond(log)
+        await bot.get_channel(int(1071511268260855808)).send(log)
     else:
         await member.remove_timeout(reason = reason)
-        await ctx.respond(f"<@{member.id}> a été débâillonné <@{ctx.author.id}> pour '{reason}'.")
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été débâillonné par {ctx.author.name} (ID : {ctx.author.id}) pour '{reason}'"
+        await ctx.respond(log)
+        await bot.get_channel(int(1071511268260855808)).send(log)
 
 @unmute.error
 async def unmuteerror(ctx, error):
