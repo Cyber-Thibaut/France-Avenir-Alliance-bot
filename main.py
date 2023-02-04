@@ -45,12 +45,12 @@ async def on_raw_reaction_add(payload):
     guild = bot.get_guild(payload.guild_id)
     member = guild.get_member(payload.user_id)
     role = discord.utils.get(guild.roles, name='Règlement Approuvé')
-    if role is not None:
+    if member is not None and role is not None:
         if payload.emoji.name == '✅':
             await member.add_roles(role)
         elif payload.emoji.name == '❎':
             await member.remove_roles(role)
-
+                
 class id(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -113,12 +113,11 @@ async def flavor(ctx):
 async def help(ctx):
     embed=discord.Embed(title="Bonjour je suis l'Assistant de direction de l'alliance France Avenir", description="Voici la liste des commandes disponibles")
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/1070035910390992926/1070065518796624044/image.png")
-    embed.add_field(name="Pour afficher 3 trains en circulation en ce moment même", value="/spot", inline=False)
     embed.add_field(name="Oups celle-ci est réservée à l'administration", value="/infos", inline=True)
     embed.add_field(name="Oups celle-ci est réservée à l'administration", value="/annonce", inline=True)
     await ctx.respond(embed=embed)
 
-@bot.slash_command(guild_ids = servers, name = "ban", description = "Ban un membre")
+@bot.slash_command(name = "ban", description = "Ban un membre")
 @commands.has_permissions(ban_members = True, administrator = True)
 async def ban(ctx, member: Option(discord.Member, description = "Who do you want to ban?"), reason: Option(str, description = "Why?", required = False)):
     if member.id == ctx.author.id: #checks to see if they're the same
@@ -139,7 +138,7 @@ async def banerror(ctx, error):
         await ctx.respond("Hum c'est pas normal...") #most likely due to missing permissions
         raise error
 
-@bot.slash_command(guild_ids = servers, name = "expulser", description = "Expluser un membre")
+@bot.slash_command(name = "expulser", description = "Expluser un membre")
 @commands.has_permissions(kick_members = True, administrator = True)
 async def kick(ctx, member: Option(discord.Member, description = "Who do you want to kick?"), reason: Option(str, description = "Why?", required = False)):
     if member.id == ctx.author.id: #checks to see if they're the same
@@ -160,7 +159,7 @@ async def kickerror(ctx, error):
         await ctx.respond("Hum c'est pas normal...") #most likely due to missing permissions 
         raise error
 
-@bot.slash_command(guild_ids = servers, name = 'bâillonner', description = "bâillonner un membre")
+@bot.slash_command(name = 'bâillonner', description = "bâillonner un membre")
 @commands.has_permissions(moderate_members = True)
 async def timeout(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False), days: Option(int, max_value = 27, default = 0, required = False), hours: Option(int, default = 0, required = False), minutes: Option(int, default = 0, required = False), seconds: Option(int, default = 0, required = False)): #setting each value with a default value of 0 reduces a lot of the code
     if member.id == ctx.author.id:
@@ -187,7 +186,7 @@ async def timeouterror(ctx, error):
     else:
         raise error
 
-@bot.slash_command(guild_ids = servers, name = 'débâillonner', description = "débâillonner un membre")
+@bot.slash_command(name = 'débâillonner', description = "débâillonner un membre")
 @commands.has_permissions(moderate_members = True)
 async def unmute(ctx, member: Option(discord.Member, required = True), reason: Option(str, required = False)):
     if reason == None:
@@ -205,8 +204,8 @@ async def unmuteerror(ctx, error):
         raise error
 
 @bot.slash_command(name="menage")
-@commands.has_permissions(MANAGE_MESSAGES = True)
-async def clear(ctx, nombre : int):
+@commands.has_permissions(manage_messages = True)
+async def menage(ctx, nombre : int):
     messages = [msg async for msg in ctx.channel.history(limit = nombre)] 
     for message in messages:
         await message.delete()
