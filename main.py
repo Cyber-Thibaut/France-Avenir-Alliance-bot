@@ -3,8 +3,9 @@ from discord.ext import commands
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import discord
 from discord import Option
-from discord.ext import commands
+from discord.ext import commands, create_choice, create_option
 from discord.ext.commands import MissingPermissions
 from datetime import timedelta
 intents = discord.Intents.default()
@@ -131,7 +132,7 @@ async def ban(ctx, member: Option(discord.Member, description = "Vous voulez rou
         await member.ban(reason = reason)
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {member.name} (ID : {member.id}) a été ban avec succès du serveur par {ctx.author.name} (ID : {ctx.author.id})!\n\nRaison: {reason}."
         await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> a été ban avec succès du serveur!\n\nRaison: {reason}")
-        await bot.get_channel(int(1071511268260855808)).send(log)
+        await bot.get_channel(int(1035131793021616168)).send(log)
     
 @ban.error
 async def banerror(ctx, error):
@@ -154,7 +155,7 @@ async def kick(ctx, member: Option(discord.Member, description = "Qui voulez vou
         await member.kick(reason = reason)
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - {member.name} (ID : {member.id}) a été été poussé du train avec succès du serveur par {ctx.author.name} (ID : {ctx.author.id})!\n\nRaison: {reason}."
         await ctx.respond(f"<@{ctx.author.id}>, <@{member.id}> à été poussé du train avec succès!\n\nRaison: {reason}")
-        await bot.get_channel(int(1071511268260855808)).send(log)
+        await bot.get_channel(int(1035131793021616168)).send(log)
 
 @kick.error
 async def kickerror(ctx, error):
@@ -181,12 +182,12 @@ async def timeout(ctx, member: Option(discord.Member, required = True), reason: 
         await member.timeout_for(duration)
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été bâillonné par {ctx.author.name} (ID : {ctx.author.id})."
         await ctx.respond(f"<@{member.id}> A été bâillonné pour {days} jours, {hours} heures, {minutes} minutes, & {seconds} secondes par <@{ctx.author.id}>.")
-        await bot.get_channel(int(1071511268260855808)).send(log)
+        await bot.get_channel(int(1035131793021616168)).send(log)
     else:
         await member.timeout_for(duration, reason = reason)
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été bâillonné par {ctx.author.name} (ID : {ctx.author.id}) pour '{reason}'."
         await ctx.respond(f"<@{member.id}> A été bâillonné pour {days} jours, {hours} heures, {minutes} minutes, & {seconds} secondes par <@{ctx.author.id}> pour '{reason}'.")
-        await bot.get_channel(int(1071511268260855808)).send(log)
+        await bot.get_channel(int(1035131793021616168)).send(log)
 
 @timeout.error
 async def timeouterror(ctx, error):
@@ -202,12 +203,12 @@ async def unmute(ctx, member: Option(discord.Member, required = True), reason: O
         await member.remove_timeout()
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été débâillonné par {ctx.author.name} (ID : {ctx.author.id})."
         await ctx.respond(log)
-        await bot.get_channel(int(1071511268260855808)).send(log)
+        await bot.get_channel(int(1035131793021616168)).send(log)
     else:
         await member.remove_timeout(reason = reason)
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')} - Utilisateur : {member.name} (ID : {member.id}) a été débâillonné par {ctx.author.name} (ID : {ctx.author.id}) pour '{reason}'"
         await ctx.respond(log)
-        await bot.get_channel(int(1071511268260855808)).send(log)
+        await bot.get_channel(int(1035131793021616168)).send(log)
 
 @unmute.error
 async def unmuteerror(ctx, error):
@@ -230,5 +231,15 @@ async def unmuteerror(ctx, error):
         await ctx.respond("Tu as besoin de la permission de gérer les messages!")
     else:
         raise error
+
+async def hello(
+    ctx: discord.ApplicationContext,
+    name: str,
+    gender: str,
+    age: int,
+):
+    await ctx.respond(
+        f"Hello {name}! Your gender is {gender} and you are {age} years old."
+    )
 load_dotenv()
 bot.run(os.getenv('TOKEN'))
